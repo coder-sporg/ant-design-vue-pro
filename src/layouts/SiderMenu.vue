@@ -24,6 +24,7 @@
 
 <script>
 import SubMenu from './SubMenu.vue'
+import { check } from '@/utils/auth'
 export default {
   props: {
     theme: {
@@ -69,9 +70,44 @@ export default {
   methods: {
     getMenuData(routes = [], parentKeys = [], selectedKey) {
       const menuData = []
-      routes.forEach((item) => {
+      // routes.forEach((item) => {
+      //   this.openKeysMap[item.path] = parentKeys
+      //   this.selectedKeysMap[item.path] = [selectedKey || item.path]
+      //   if (item.name && !item.hideInMenu) {
+      //     const newItem = { ...item }
+      //     delete newItem.children
+      //     if (item.children && !item.hideChildrenInMenu) {
+      //       newItem.children = this.getMenuData(item.children, [
+      //         ...parentKeys,
+      //         item.path
+      //       ])
+      //     } else {
+      //       this.getMenuData(
+      //         item.children,
+      //         selectedKey ? parentKeys : [...parentKeys, item.path],
+      //         selectedKey || item.path
+      //       )
+      //     }
+      //     menuData.push(newItem)
+      //   } else if (
+      //     !item.hideInMenu &&
+      //     !item.hideChildrenInMenu &&
+      //     item.children
+      //   ) {
+      //     menuData.push(
+      //       ...this.getMenuData(item.children, [...parentKeys, item.path])
+      //     )
+      //   }
+      // })
+
+      for (const item of routes) {
         this.openKeysMap[item.path] = parentKeys
         this.selectedKeysMap[item.path] = [selectedKey || item.path]
+
+        if (item.meta && item.meta.authority && !check(item.meta.authority)) {
+          break
+        }
+
         if (item.name && !item.hideInMenu) {
           const newItem = { ...item }
           delete newItem.children
@@ -97,15 +133,19 @@ export default {
             ...this.getMenuData(item.children, [...parentKeys, item.path])
           )
         }
-      })
+      }
 
       return menuData
     },
     handleMenuItem(item) {
-      this.$router.push({
-        path: item.path,
-        query: this.$route.query
-      })
+      if (item.meta && item.meta.target) {
+        window.open(item.path)
+      } else {
+        this.$router.push({
+          path: item.path,
+          query: this.$route.query
+        })
+      }
     }
   }
 }
